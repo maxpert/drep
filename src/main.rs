@@ -1,22 +1,24 @@
+use std::fs;
+use std::io;
+use std::io::{BufReader, Write};
+use std::io::prelude::*;
+use std::result::Result;
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::channel;
+use std::thread;
+use std::time::Duration;
+
+use notify::{RecursiveMode, Watcher, watcher};
+use regex::Regex;
+use structopt::StructOpt;
+
+use cli::CliOpts;
+use errors::FiltersLoadError;
+
 mod errors;
 mod cli;
 
-use notify::{Watcher, RecursiveMode, watcher};
-use std::sync::mpsc::channel;
-use std::time::Duration;
-use std::io;
-use std::thread;
-use std::fs;
-use std::io::prelude::*;
-use std::io::{BufReader, Write};
-use std::result::{Result};
-use regex::{Regex};
-use std::sync::{Arc, Mutex};
-use errors::LoadError;
-use cli::CliOpts;
-use structopt::StructOpt;
-
-fn load_filters(path: &str) -> Result<Vec<Regex>, LoadError> {
+fn load_filters(path: &str) -> Result<Vec<Regex>, FiltersLoadError> {
     let file = fs::File::open(path)?;
     let mut rules: Vec<Regex> = Vec::new();
     for line in BufReader::new(file).lines() {
@@ -36,7 +38,7 @@ fn watch_and_reload_filters(filters: Arc<Mutex<Vec<Regex>>>, path: &str) {
     let mut stderr = io::stderr();
     let (tx, rx) = channel();
     let mut watcher = watcher(tx, Duration::from_secs(5)).unwrap();
-    
+
     watcher.watch(&path, RecursiveMode::Recursive).unwrap();
 
     loop {
@@ -72,22 +74,21 @@ fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<
 fn main() {
     let opts: CliOpts = CliOpts::from_args();
     let file_path = opts.filters_path.to_str().unwrap();
+    let loaded_filters = load_filters(file_path).unwrap();
+    let filters: Arc<Mutex<Vec<Regex>>> = Arc::new(Mutex::new(loaded_filters));
+
     let mut stdout = io::stdout();
     let mut stderr = io::stderr();
 
-    let loaded_filters = load_filters(file_path).unwrap_or(Vec::new());
-    let filters: Arc<Mutex<Vec<Regex>>> = Arc::new(Mutex::new(loaded_filters)); 
-
     watch_config(&filters, file_path);
-    
+
     loop {
         let mut input_line = String::new();
         match io::stdin().read_line(&mut input_line) {
             Ok(_) => process_line(&mut stdout, &mut input_line, &filters),
-            Err(e) => { 
+            Err(e) => {
                 writeln!(stderr, "Error {}: {}", e, input_line).unwrap();
             }
         }
     }
-    
 }
