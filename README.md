@@ -2,7 +2,7 @@
 
 # drep is dynamic regular expression print
 
-drep is a hot-reloadable regex filter for your piped input. This allows you filter stream of logs lines while changing regex filters on the fly. Here is an example usage:
+drep is a auto reloaded regex from file to filter your piped input lines. This allows you filter stream of logs/lines while changing regex filters on the fly. Here is an example usage:
 
 ```bash
 tail -f /var/log/nginx/error | drep -f /etc/drep/filters.regex
@@ -15,7 +15,7 @@ Here `filters.regex` is an expressions file, and each line is treated as regular
 178.\d+.\d+.\d+
 ```
 
-For regular expression syntax please consult [this document](https://docs.rs/regex/1.3.9/regex/). 
+For regular expression documentation please refer to [this document](https://docs.rs/regex/1.3.9/regex/). 
 
 ## Why?
 
