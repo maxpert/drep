@@ -71,13 +71,14 @@ fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<
 
 fn main() {
     let opts: CliOpts = CliOpts::from_args();
+    let file_path = opts.filters_path.to_str().unwrap();
     let mut stdout = io::stdout();
     let mut stderr = io::stderr();
 
-    let loaded_filters = load_filters(opts.filters_path.to_str().unwrap()).unwrap_or(Vec::new());
+    let loaded_filters = load_filters(file_path).unwrap_or(Vec::new());
     let filters: Arc<Mutex<Vec<Regex>>> = Arc::new(Mutex::new(loaded_filters)); 
 
-    watch_config(&filters, opts.filters_path.to_str().unwrap());
+    watch_config(&filters, file_path);
     
     loop {
         let mut input_line = String::new();
