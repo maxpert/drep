@@ -74,7 +74,13 @@ fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<
 fn main() {
     let opts: CliOpts = CliOpts::from_args();
     let file_path = opts.filters_path.to_str().unwrap();
-    let loaded_filters = load_filters(file_path).unwrap();
+    let loaded_filters = match load_filters(file_path) {
+        Ok(v) => v,
+        Err(e) => {
+            println!("drep failed {}", e);
+            return;
+        }
+    };
     let filters: Arc<Mutex<Vec<Regex>>> = Arc::new(Mutex::new(loaded_filters));
 
     let mut stdout = io::stdout();

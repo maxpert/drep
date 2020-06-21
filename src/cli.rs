@@ -10,6 +10,6 @@ pub struct CliOpts {
     pub debug: bool,
 
     /// Path to watch
-    #[structopt(short = "f", long = "filter", default_value = "filters.regex", parse(from_os_str))]
+    #[structopt(short = "f", long = "filter", parse(from_os_str))]
     pub filters_path: PathBuf,
 }
