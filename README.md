@@ -1,3 +1,5 @@
+![Rust](https://github.com/maxpert/drep/workflows/Rust/badge.svg)
+
 # drep is dynamic regular expression print
 
 drep is a hot-reloadable regex filter for your piped input. This allows you filter stream of logs lines while changing regex filters on the fly. Here is an example usage:
