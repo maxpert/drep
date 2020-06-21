@@ -23,9 +23,61 @@ While `grep --line-buffered` can do something similar changing regex on the fly 
 
 ## Features
 
- - Lightweight (2 threads in total).
+ - Lightweight on CPU, and memory (<5MB memory foot print, and 2 threads in total).
  - Watch and reload filters file.
- - No GC overhead (written in rust).
+ - No GC pauses and memory safe (Written in Rust).
+ 
+## Usage tutorial
+
+Given following simple `fizzbuzz.py`:
+
+```python
+import time
+
+i = 1
+while True:
+    fb = ""
+    if i % 3 == 0:
+        fb = "fizz"
+    if i % 5 == 0:
+        fb = "{}buzz".format(fb)
+
+    if fb:
+        print("{}. {}".format(i, fb), flush=True)
+
+    i = i + 1
+    time.sleep(0.1)
+```
+
+We can launch and pipe it's output `python fizzbuzz.py | drep -f filters.regex`. Now if the contents of `filters.regex` are:
+
+```
+\sfizz\n
+``` 
+
+drep will only emit logs with fizz. e.g.
+
+```
+642. fizz
+648. fizz
+651. fizz
+654. fizz
+...
+```
+
+While keeping the process running without exiting you can just modify `filters.regex` to:
+
+```
+\sbuzz\n
+```
+
+This will change the drep output on the fly to only emit buzz:
+```
+805. buzz
+815. buzz
+820. buzz
+...
+```
 
 ## Building
 
