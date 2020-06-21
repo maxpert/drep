@@ -5,7 +5,7 @@
 drep is a auto reloaded regex from file to filter your piped input lines. This allows you filter stream of logs/lines while changing regex filters on the fly. Here is an example usage:
 
 ```bash
-tail -f /var/log/nginx/error | drep -f /etc/drep/filters.regex
+tail -f /var/log/nginx/error.log | drep -f /etc/drep/filters.regex
 ```
 
 Here `filters.regex` is an expressions file, and each line is treated as regular expressions, any changes to the `filters.regex` file will automatically update the regex filters, an example file can look like this:
@@ -27,7 +27,7 @@ While `grep --line-buffered` can do something similar changing regex on the fly 
  - Watch and reload filters file.
  - No GC pauses and memory safe (Written in Rust).
  
-## Usage tutorial
+## Usage example
 
 Given following simple `fizzbuzz.py`:
 
