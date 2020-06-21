@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "ertugrul", about = "Runtime regex log filter")]
+#[structopt(name = "drep", about = "Hot load regex log filter")]
 pub struct CliOpts {
     /// Activate debug mode
     #[structopt(short, long)]
