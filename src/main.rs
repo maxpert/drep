@@ -1,40 +1,22 @@
-use std::fs;
 use std::io;
-use std::io::{BufReader, Write};
-use std::io::prelude::*;
-use std::result::Result;
+use std::io::Write;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time::Duration;
 
 use notify::{RecursiveMode, Watcher, watcher};
-use regex::Regex;
 use structopt::StructOpt;
 
 use cli::CliOpts;
-use errors::FiltersLoadError;
+use filter::{Filter, load_filters};
 
+mod filter;
 mod errors;
 mod cli;
 
-fn load_filters(path: &str) -> Result<Vec<Regex>, FiltersLoadError> {
-    let file = fs::File::open(path)?;
-    let mut rules: Vec<Regex> = Vec::new();
-    for line in BufReader::new(file).lines() {
-        let line_str = line?;
-        if line_str.len() == 0 {
-            continue;
-        }
 
-        let exp = Regex::new(line_str.as_str())?;
-        rules.push(exp);
-    }
-
-    return Ok(rules);
-}
-
-fn watch_and_reload_filters(filters: Arc<Mutex<Vec<Regex>>>, path: &str) {
+fn watch_and_reload_filters(filters: Arc<Mutex<Vec<Filter>>>, path: &str) {
     let mut stderr = io::stderr();
     let (tx, rx) = channel();
     let mut watcher = watcher(tx, Duration::from_secs(5)).unwrap();
@@ -42,7 +24,7 @@ fn watch_and_reload_filters(filters: Arc<Mutex<Vec<Regex>>>, path: &str) {
     watcher.watch(&path, RecursiveMode::Recursive).unwrap();
 
     loop {
-        let mut expressions: Vec<Regex> = Vec::new();
+        let mut expressions: Vec<Filter> = Vec::new();
         match rx.recv() {
             Ok(_) => expressions = load_filters(path).unwrap_or(expressions),
             Err(e) => writeln!(stderr, "Error: {}", e).unwrap()
@@ -53,7 +35,7 @@ fn watch_and_reload_filters(filters: Arc<Mutex<Vec<Regex>>>, path: &str) {
     }
 }
 
-fn watch_config(filters: &Arc<Mutex<Vec<Regex>>>, path: &str) {
+fn watch_config(filters: &Arc<Mutex<Vec<Filter>>>, path: &str) {
     let watch_filters = filters.clone();
     let watch_path = path.to_owned();
     thread::spawn(move || {
@@ -61,10 +43,10 @@ fn watch_config(filters: &Arc<Mutex<Vec<Regex>>>, path: &str) {
     });
 }
 
-fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<Vec<Regex>>) {
+fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<Vec<Filter>>) {
     let filter_items = filters.lock().unwrap();
-    for exp in filter_items.iter() {
-        if exp.is_match(input.as_str()) {
+    for filter in filter_items.iter() {
+        if filter.is_match(input.as_str()) {
             writer.write(input.as_bytes()).unwrap();
             return;
         }
@@ -81,7 +63,7 @@ fn main() {
             return;
         }
     };
-    let filters: Arc<Mutex<Vec<Regex>>> = Arc::new(Mutex::new(loaded_filters));
+    let filters = Arc::new(Mutex::new(loaded_filters));
 
     let mut stdout = io::stdout();
     let mut stderr = io::stderr();

@@ -1,0 +1,16 @@
+Each line of the filters file is an expression that starts with ~, =, !=, or !~
+The matches will be done in the order they appear and if anything matches it's piped to stdout right away
+
+Any line that starts with `!~` implies does not match regex, e.g:
+!~"time": \d+.\d{0,2}
+
+Any line that starts with ~ implies match regex, e.g:
+~"time": \d+.\d{3,}
+
+Any line that starts with `!=` implies does not contain text, e.g:
+!=INFO
+
+Any line that starts with `=` implies contain text, e.g:
+="total-duration"
+
+Everything else is ignored, as you can see from plain text.

@@ -4,7 +4,7 @@ use std::io;
 #[derive(Debug)]
 pub enum FiltersLoadError {
     IoError(io::Error),
-    ParseError(regex::Error),
+    ParseError(regex::Error)
 }
 
 impl From<io::Error> for FiltersLoadError {
@@ -23,7 +23,7 @@ impl fmt::Display for FiltersLoadError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         return match self {
             FiltersLoadError::IoError(e) => write!(f, "IO error: {}", e),
-            FiltersLoadError::ParseError(e) => write!(f, "parse error: {}", e)
+            FiltersLoadError::ParseError(e) => write!(f, "parse error: {}", e),
         }
     }
 }
