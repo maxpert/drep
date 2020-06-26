@@ -2,30 +2,44 @@
 
 # drep is dynamic regular expression print
 
-drep is a auto reloaded regex from file to filter your piped input lines. This allows you filter stream of logs/lines while changing regex filters on the fly. Here is an example usage:
+`drep` is `grep` with dynamic reloadable filter expressions. This allows filtering stream of 
+logs/lines, while changing filters on the fly.
+
+Filter is either a regex or plain text match, provided via input file.  
+Here is an example usage:
 
 ```bash
-tail -f /var/log/nginx/error.log | drep -f /etc/drep/filters.regex
+tail -f /var/log/nginx/error.log | drep -f /etc/drep/filters
 ```
 
-Here `filters.regex` is an expressions file, and each line is treated as regular expressions, any changes to the `filters.regex` file will automatically update the regex filters, an example file can look like this:
+## Filter file syntax
 
-```
-(?i)warn(?-i)
-178.\d+.\d+.\d+
-```
+Each line of the filters file is an expression that starts with `~`, `=`, `!=`, or `!~`. The matches will be done 
+in the order filters written in the file, and if a filter matches subsequent filters won't be executed. 
 
+ - Any line that starts with `!~` implies does not match regex, e.g: `!~"time": \d+.\d{0,2}`
+ - Any line that starts with `~` implies match regex, e.g: `~"time": \d+.\d{3,}`
+ - Any line that starts with `!=` implies does not contain text, e.g: `!=INFO`
+ - Any line that starts with `=` implies contain text, e.g: `="total-duration"`
+
+Everything else is ignored, as you can see from plain text.
 For regular expression documentation please refer to [this document](https://docs.rs/regex/1.3.9/regex/). 
 
 ## Why?
 
-While `grep --line-buffered` can do something similar changing regex on the fly is not possible. Change filter regex on the fly is extremely useful in server/process environments where it's not possible to restart the process just to change the `grep` filter. Building on unix philosophy drep does only one job well, given bunch of regexes from an input file it can filter piped input stream of text lines.
+While `grep --line-buffered` can do something similar changing regex on the fly is not possible. 
+Change filter regex on the fly is extremely useful in server/process environments where it's not possible to restart 
+the process just to change the `grep` filter. 
+
+Building on unix philosophy `drep` does only one job well, given bunch of filter from an input file 
+it can filter input lines to stdout.
 
 ## Features
 
- - Lightweight on CPU, and memory (<5MB memory foot print, and 2 threads in total).
+ - Lightweight on CPU, and memory (~3MB memory foot print, and 2 threads in total).
  - Watch and reload filters file.
  - No GC pauses and memory safe (Written in Rust).
+ - Plain text & regex matching (with negation support).
  
 ## Usage example
 
@@ -49,10 +63,10 @@ while True:
     time.sleep(0.1)
 ```
 
-We can launch and pipe it's output `python fizzbuzz.py | drep -f filters.regex`. Now if the contents of `filters.regex` are:
+We can launch and pipe it's output `python fizzbuzz.py | drep -f filters`. Now if the contents of `filters` are:
 
 ```
-\sfizz\n
+~\sfizz\n
 ``` 
 
 drep will only emit logs with fizz. e.g.
@@ -65,10 +79,10 @@ drep will only emit logs with fizz. e.g.
 ...
 ```
 
-While keeping the process running without exiting you can just modify `filters.regex` to:
+While keeping the process running without exiting you can just modify `filters` to:
 
 ```
-\sbuzz\n
+~\sbuzz\n
 ```
 
 This will change the drep output on the fly to only emit buzz:
