@@ -12,6 +12,10 @@ Here is an example usage:
 tail -f /var/log/nginx/error.log | drep -f /etc/drep/filters
 ```
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/W0B5ZVOD96YEDbhb7vnKAy1HW.svg)](https://asciinema.org/a/W0B5ZVOD96YEDbhb7vnKAy1HW)
+
 ## Filter file syntax
 
 Each line of the filters file is an expression that starts with `~`, `=`, `!=`, or `!~`. The matches will be done 
