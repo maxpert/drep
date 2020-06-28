@@ -1,4 +1,4 @@
-![Rust](https://github.com/maxpert/drep/workflows/Rust/badge.svg)
+[![Rust](https://github.com/maxpert/drep/workflows/Rust/badge.svg)](https://github.com/maxpert/drep/actions) [![Version](https://img.shields.io/github/v/release/maxpert/drep)](https://github.com/maxpert/drep/releases)
 
 # drep is dynamic regular expression print
 
