@@ -1,11 +1,12 @@
 use std::io;
 use std::io::Write;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time::Duration;
 
-use notify::{RecursiveMode, Watcher, watcher};
+use notify::{DebouncedEvent, RecursiveMode, Watcher, watcher};
+use parking_lot::Mutex;
 use structopt::StructOpt;
 
 use cli::CliOpts;
@@ -16,40 +17,71 @@ mod errors;
 mod cli;
 
 
+fn is_update_event(ev: &DebouncedEvent) -> bool {
+    match ev {
+        DebouncedEvent::Write(_)
+        | DebouncedEvent::Create(_)
+        | DebouncedEvent::Remove(_)
+        | DebouncedEvent::Rename(_, _)
+        | DebouncedEvent::Chmod(_) => true,
+        _ => false
+    }
+}
+
+fn load_filters(path: &str, stderr: &mut io::Stderr) -> Vec<Filter> {
+    match Filter::load(path) {
+        Ok(res) => res,
+        Err(e) => {
+            writeln!(stderr, "Error loading filters {}, defaulting to empty filters", e).unwrap();
+            Vec::new()
+        }
+    }
+}
+
 fn watch_and_reload_filters(filters: Arc<Mutex<Vec<Filter>>>, path: &str) {
     let mut stderr = io::stderr();
     let (tx, rx) = channel();
-    let mut watcher = watcher(tx, Duration::from_secs(5)).unwrap();
+    let mut watcher = watcher(tx, Duration::from_millis(100)).unwrap();
 
-    watcher.watch(&path, RecursiveMode::Recursive).unwrap();
+    watcher.watch(&path, RecursiveMode::NonRecursive).unwrap();
 
     loop {
-        let mut expressions: Vec<Filter> = Vec::new();
         match rx.recv() {
-            Ok(_) => expressions = Filter::load(path).unwrap_or(expressions),
+            Ok(ev) => {
+                if is_update_event(&ev) {
+                    let expressions = load_filters(path, &mut stderr);
+                    let mut curr_filters = filters.lock();
+                    *curr_filters = expressions;
+                }
+            }
             Err(e) => writeln!(stderr, "Error: {}", e).unwrap()
         }
-
-        let mut curr_filters = filters.lock().unwrap();
-        *curr_filters = expressions
     }
 }
 
 fn watch_config(filters: &Arc<Mutex<Vec<Filter>>>, path: &str) {
     let watch_filters = filters.clone();
-    let watch_path = path.to_owned();
+    let watch_path = String::from(path);
     thread::spawn(move || {
         watch_and_reload_filters(watch_filters, watch_path.as_str());
     });
 }
 
-fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<Vec<Filter>>) {
-    let filter_items = filters.lock().unwrap();
+#[inline]
+fn is_match(filters: &Mutex<Vec<Filter>>, input: &mut String) -> bool {
+    let filter_items = filters.lock();
     for filter in filter_items.iter() {
         if filter.is_match(input.as_str()) {
-            writer.write(input.as_bytes()).unwrap();
-            return;
+            return true;
         }
+    }
+
+    return false;
+}
+
+fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<Vec<Filter>>) {
+    if is_match(filters, input) {
+        writer.write(input.as_bytes()).unwrap();
     }
 }
 
