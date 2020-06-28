@@ -9,7 +9,7 @@ use notify::{RecursiveMode, Watcher, watcher};
 use structopt::StructOpt;
 
 use cli::CliOpts;
-use filter::{Filter, load_filters};
+use filter::Filter;
 
 mod filter;
 mod errors;
@@ -26,7 +26,7 @@ fn watch_and_reload_filters(filters: Arc<Mutex<Vec<Filter>>>, path: &str) {
     loop {
         let mut expressions: Vec<Filter> = Vec::new();
         match rx.recv() {
-            Ok(_) => expressions = load_filters(path).unwrap_or(expressions),
+            Ok(_) => expressions = Filter::load(path).unwrap_or(expressions),
             Err(e) => writeln!(stderr, "Error: {}", e).unwrap()
         }
 
@@ -56,7 +56,7 @@ fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<
 fn main() {
     let opts: CliOpts = CliOpts::from_args();
     let file_path = opts.filters_path.to_str().unwrap();
-    let loaded_filters = match load_filters(file_path) {
+    let loaded_filters = match Filter::load(file_path) {
         Ok(v) => v,
         Err(e) => {
             println!("drep failed {}", e);
