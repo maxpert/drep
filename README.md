@@ -12,6 +12,18 @@ Here is an example usage:
 tail -f /var/log/nginx/error.log | drep -f /etc/drep/filters
 ```
 
+Usually you will end up using this with your servers:
+
+```bash
+java -jar my-server.jar | drep -f server-filters
+```
+
+or 
+
+```bash
+./uwsgi -s :8080 -w my_app  | drep -f server-filters
+```
+
 ## Demo
 
 [![asciicast](https://asciinema.org/a/W0B5ZVOD96YEDbhb7vnKAy1HW.svg)](https://asciinema.org/a/W0B5ZVOD96YEDbhb7vnKAy1HW)
