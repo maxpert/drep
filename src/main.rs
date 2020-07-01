@@ -47,13 +47,12 @@ fn watch_and_reload_filters(filters: Arc<Mutex<Vec<Filter>>>, path: &str) {
 
     loop {
         match rx.recv() {
-            Ok(ev) => {
-                if is_update_event(&ev) {
-                    let expressions = load_filters(path, &mut stderr);
-                    let mut curr_filters = filters.lock();
-                    *curr_filters = expressions;
-                }
+            Ok(ev) if is_update_event(&ev) => {
+                let expressions = load_filters(path, &mut stderr);
+                let mut curr_filters = filters.lock();
+                *curr_filters = expressions;
             }
+            Ok(_) => {},
             Err(e) => writeln!(stderr, "Error: {}", e).unwrap()
         }
     }
@@ -72,16 +71,16 @@ fn is_match(filters: &Mutex<Vec<Filter>>, input: &mut String) -> bool {
     let filter_items = filters.lock();
     for filter in filter_items.iter() {
         if filter.is_match(input.as_str()) {
-            return true;
+            return true
         }
     }
 
-    return false;
+    false
 }
 
 fn process_line(writer: &mut dyn io::Write, input: &mut String, filters: &Mutex<Vec<Filter>>) {
     if is_match(filters, input) {
-        writer.write(input.as_bytes()).unwrap();
+        writer.write_all(input.as_bytes()).unwrap();
     }
 }
 

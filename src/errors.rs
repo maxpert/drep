@@ -21,7 +21,7 @@ impl From<regex::Error> for FiltersLoadError {
 
 impl fmt::Display for FiltersLoadError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        return match self {
+        match self {
             FiltersLoadError::IoError(e) => write!(f, "IO error: {}", e),
             FiltersLoadError::ParseError(e) => write!(f, "parse error: {}", e),
         }
