@@ -21,11 +21,11 @@ pub struct Filter {
 
 impl Filter {
     pub fn is_match(&self, text: &str) -> bool {
-        return match &self.filter_type {
+        match &self.filter_type {
             FilterType::Expr(exp) => exp.is_match(text) ^ self.inverted,
             FilterType::Text(need) => text.contains(need) ^ self.inverted,
             FilterType::Noop => false
-        };
+        }
     }
 
     pub fn load(path: &str) -> Result<Vec<Filter>, FiltersLoadError> {
@@ -33,7 +33,7 @@ impl Filter {
         let mut rules: Vec<Filter> = Vec::new();
         for line in BufReader::new(file).lines() {
             let line_str = line?;
-            if line_str.len() == 0 {
+            if line_str.is_empty() {
                 continue;
             }
 
@@ -44,28 +44,28 @@ impl Filter {
             }
         }
 
-        return Ok(rules);
+        Ok(rules)
     }
 
     fn parse(text: &str) -> Result<Filter, FiltersLoadError> {
-        let inverted = text.starts_with("!");
+        let inverted = text.starts_with('!');
         let exp_text = if inverted {
             &text[1..]
         } else {
             &text[0..]
         };
 
-        let filter_type = if exp_text.starts_with("~") {
+        let filter_type = if exp_text.starts_with('~') {
             FilterType::Expr(Regex::new(&exp_text[1..])?)
-        } else if exp_text.starts_with("=") {
+        } else if exp_text.starts_with('=') {
             FilterType::Text(String::from(&exp_text[1..]))
         } else {
             FilterType::Noop
         };
 
-        return Ok(Filter {
+        Ok(Filter {
             inverted,
             filter_type,
-        });
+        })
     }
 }
