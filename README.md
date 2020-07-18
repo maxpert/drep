@@ -24,10 +24,6 @@ or
 ./uwsgi -s :8080 -w my_app  | drep -f server-filters
 ```
 
-## Demo
-
-[![asciicast](https://asciinema.org/a/W0B5ZVOD96YEDbhb7vnKAy1HW.svg)](https://asciinema.org/a/W0B5ZVOD96YEDbhb7vnKAy1HW)
-
 ## Filter file syntax
 
 Each line of the filters file is an expression that starts with `~`, `=`, `!=`, or `!~`. The matches will be done 
