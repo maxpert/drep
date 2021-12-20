@@ -15,6 +15,9 @@ env:
   # paths to be preserved. Use "/" as a delimiter.
   RELEASE_ADDS: README.md LICENSE example_filters
 
+  # For now allow this to build workflows
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
 jobs:
   build:
     name: Build release
