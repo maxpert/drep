@@ -1,6 +1,6 @@
 [package]
 name = "drep"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Zohaib Sibte Hassan <zohaibsh@gmail.com>"]
 edition = "2018"
 description = "drep is grep with dynamic reloadable filter expressions. This allows filtering stream of logs/lines, while changing filters on the fly."
